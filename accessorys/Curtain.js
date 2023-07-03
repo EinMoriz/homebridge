@@ -12,6 +12,7 @@ const Accessory = require("../Accessory");
 const i2c = require("i2c-bus");
 const VL53L0X = require("vl53l0x");
 const Gpio = require("../index")("pigpio").Gpio;
+const Switcher = require("../index")("switcher");
 const fs = require("fs");
 
 module.exports.clazz = class Curtain extends Accessory {
@@ -44,6 +45,8 @@ module.exports.clazz = class Curtain extends Accessory {
         this.maxTime = config["calibration"]["maxTime"];
         this.maxTimeDark = config["calibration"]["maxTimeDark"];
         this.targetTolerance = config["calibration"]["targetTolerance"];
+
+        Switcher.setButton(this.selectUpButton, this.clickTime);
 
         fs.readFile("save.json", (err, data) => {
             if (!err) {
@@ -134,16 +137,7 @@ module.exports.clazz = class Curtain extends Accessory {
     async pushButton(pin) {
         const sleep = s => new Promise(r => setTimeout(r, s));
 
-        /*
-        for (let i = 1; i < this.curtainSelectIndex; i++) {
-            this.selectUpButton.mode(Gpio.INPUT);
-            await sleep(this.clickTime);
-            this.selectUpButton.mode(Gpio.OUTPUT);
-            await sleep(this.clickTime);
-            this.selectUpButton.mode(Gpio.INPUT);
-            await sleep(1000);
-        }
-        */
+        await Switcher.changeIndex(this.curtainSelectIndex);
 
         pin.mode(Gpio.OUTPUT);
         await sleep(this.clickTime);
@@ -186,8 +180,6 @@ module.exports.clazz = class Curtain extends Accessory {
             if (this.position == 0) {
                 time += this.maxTimeDark - this.maxTime;
             }
-
-            console.log(time);
 
             if (dif < 0) {
                 this.state = 1;
