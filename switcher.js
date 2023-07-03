@@ -2,7 +2,7 @@ const {Gpio} = require("./index")("pigpio");
 
 class Switcher {
 
-    currentIndex = 0;
+    currentIndex = 5;
 
     setButton(up, down, clickTime) {
         this.up = up;
