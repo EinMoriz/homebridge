@@ -25,6 +25,8 @@ class Switcher {
             this.up.mode(Gpio.INPUT);
             await sleep(1000);
 
+            console.log(this.currentIndex, index);
+
             this.currentIndex++;
             if (this.currentIndex === 11) {
                 this.currentIndex = 1;
