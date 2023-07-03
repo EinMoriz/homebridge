@@ -3,7 +3,7 @@ const pigpio = require("pigpio");
 const Switcher = require("./switcher");
 
 const plugin_id = "homebridge-moriz";
-const switcher = new Switcher();
+const switcher = new Switcher(pigpio);
 /**
  * @param {API} homebridge
  */

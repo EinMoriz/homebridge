@@ -1,6 +1,11 @@
-const {Gpio} = require("./index")("pigpio");
+let Gpio;
 
 class Switcher {
+
+    constructor(pigpio) {
+       Gpio = pigpio.Gpio;
+    }
+
 
     currentIndex = 5;
 
