@@ -11,17 +11,16 @@ class Switcher {
 
     setButton(up, clickTime) {
         this.up = up;
-        this.clickTime = clickTime;
     }
 
     async changeIndex(index) {
         const sleep = s => new Promise(r => setTimeout(r, s));
 
-        console.log(this.up);
-
         while (this.currentIndex !== index) {
+            this.up.mode(Gpio.INPUT);
+            await sleep(500);
             this.up.mode(Gpio.OUTPUT);
-            await sleep(this.clickTime);
+            await sleep(500);
             this.up.mode(Gpio.INPUT);
             await sleep(1000);
 
