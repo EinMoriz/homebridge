@@ -5,7 +5,7 @@ const Switcher = require("./switcher");
 const plugin_id = "homebridge-moriz";
 const switcher = new Switcher(pigpio);
 /**
- * @param {API} homebridge
+ * @param {API|string} homebridge
  */
 module.exports = function (homebridge) {
     if (homebridge === "pigpio") {

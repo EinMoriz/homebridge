@@ -1,13 +1,16 @@
+const fs = require("fs");
+
 let Gpio;
 
 class Switcher {
 
     constructor(pigpio) {
        Gpio = pigpio.Gpio;
+
+       this.currentIndex = parseInt(fs.readFileSync("currentIndex", {encoding: "utf8"}));
     }
 
-
-    currentIndex = 5;
+    currentIndex;
 
     setButton(up, clickTime) {
         this.up = up;
@@ -30,6 +33,8 @@ class Switcher {
             if (this.currentIndex === 11) {
                 this.currentIndex = 1;
             }
+
+            await fs.writeFileSync("currentIndex", ""+this.currentIndex)
         }
     }
 }
