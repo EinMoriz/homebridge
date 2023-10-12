@@ -48,19 +48,19 @@ module.exports.clazz = class Curtain extends Accessory {
 
         Switcher.setButton(this.selectUpButton, this.clickTime);
 
-        fs.readFile("save.json", (err, data) => {
+        fs.readFile("save-" + this.name + ".json", (err, data) => {
             if (!err) {
                 data = JSON.parse(data);
                 if (data.position) {
                     this.position = data.position;
                 }
                 if (data.target) {
-                    this.setTarget(data.target, () => null);
+                    this.target = data.target;
                 }
             }
         });
-		
-		/*
+
+        /*
 
         i2c.openPromisified(3, {forceAccess: true}).then(async bus => {
             const laser = VL53L0X(bus, this.sensorAddress);
@@ -79,8 +79,8 @@ module.exports.clazz = class Curtain extends Accessory {
                 }
             }, 1000);
         });
-		
-		*/
+
+        */
 
         this.registerServices();
     }
@@ -139,35 +139,38 @@ module.exports.clazz = class Curtain extends Accessory {
 
         await Switcher.changeIndex(this.curtainSelectIndex);
 
+        await sleep(200);
         pin.mode(Gpio.OUTPUT);
         await sleep(this.clickTime);
         pin.mode(Gpio.INPUT);
     }
 
-    checkState() {
+    async checkState() {
         const update = () => {
             this.curtainService.getCharacteristic(Characteristic.CurrentPosition).updateValue(this.position);
             this.curtainService.getCharacteristic(Characteristic.PositionState).updateValue(this.state);
 
-            fs.writeFile("save.json", JSON.stringify({
+            fs.writeFile("save-" + this.name + ".json", JSON.stringify({
                 target: this.target,
                 position: this.position
             }), () => null);
         }
 
-        if (this.target == 0) {
-            this.state = 0;
-            this.pushButton(this.downButton);
+        await Switcher.lockState();
 
+        if (this.target === 0) {
+            this.state = 0;
+            await this.pushButton(this.downButton);
+            Switcher.freeState();
             setTimeout(() => {
                 this.position = 0;
                 this.state = 2;
                 update();
             }, this.maxTimeDark * 1000);
-        } else if (this.target == 100) {
+        } else if (this.target === 100) {
             this.state = 1;
-            this.pushButton(this.upButton);
-
+            await this.pushButton(this.upButton);
+            Switcher.freeState();
             setTimeout(() => {
                 this.position = 100;
                 this.state = 2;
@@ -177,29 +180,27 @@ module.exports.clazz = class Curtain extends Accessory {
             const dif = this.position - this.target;
             let time = this.maxTime * (Math.abs(dif) / 100);
 
-            if (this.position == 0) {
+            if (this.position === 0) {
                 time += this.maxTimeDark - this.maxTime;
             }
 
             if (dif < 0) {
                 this.state = 1;
-                this.pushButton(this.upButton);
+                await this.pushButton(this.upButton);
             } else {
                 this.state = 0;
-                this.pushButton(this.downButton);
+                await this.pushButton(this.downButton);
             }
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 this.position = this.target;
                 this.state = 2;
-                this.pushButton(this.stopButton);
+                await this.pushButton(this.stopButton);
+                Switcher.freeState();
                 update();
             }, time * 1000);
-
-            update();
         }
-
-
+        update();
 
         /*
         if (Math.abs(dif) <= this.targetTolerance) {
